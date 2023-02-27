@@ -83,7 +83,7 @@ history = autoencoder.fit(onehot_train_mask, onehot_train,
                     epochs=100,
                     batch_size=BATCH_SIZE,
                     shuffle=True,
-                    validation_data=(onehot_test_mask, onehot_test)) 
+                    validation_data=(onehot_val_mask, onehot_val)) 
 autoencoder.save('trained_model/')
 
 
