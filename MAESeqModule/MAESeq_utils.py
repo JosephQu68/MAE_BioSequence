@@ -1,0 +1,127 @@
+import os
+import numpy as np
+import tensorflow as tf
+
+def dataloader(file = 'scop_fa_represeq_lib_latest.fa', len_data = 5000, max_len_percintile=80):
+    file_o = open(file, 'r')
+    seq_list = []
+    seq_length = []
+
+    try:
+        while True:
+            temp_line = file_o.readline()
+            if len(temp_line) == 0:
+                break
+            if temp_line[0] != '>':
+                temp_line = temp_line.rstrip()
+                temp_line = list(temp_line)
+                seq_list.append(temp_line)
+                #print(temp_line)
+    finally:
+        file_o.close()
+
+    MAX_LENGTH = 0
+    seq_list = seq_list[:len_data]
+
+    for single_list in seq_list:
+        seq_length.append(len(single_list))
+    seq_length = np.array(seq_length)
+    MAX_LENGTH = int(np.percentile(seq_length,max_len_percintile))
+    
+    return seq_list, MAX_LENGTH
+
+
+#   得到词典
+def get_dict(data):
+    voc = set()
+    for single_list in data:
+        for single_chr in single_list:
+            voc.add(single_chr)
+
+    voc = list(voc)
+
+    voc_char_to_int = dict()
+    voc_int_to_char = dict()
+    for i in range(len(voc)):
+        voc_char_to_int[voc[i]] = i
+    for i in range(len(voc)):
+        voc_int_to_char[i] = voc[i]
+    return voc_char_to_int, voc_int_to_char
+
+
+
+def _seq_to_integer(seq_char_list,voc_char_to_int):
+# 将氨基酸（字母）序列转换成数字序列
+    res = []
+    for single_chr in seq_char_list:
+        res.append(voc_char_to_int[single_chr])
+    return res
+
+def _integer_to_onehot(seq_int, max_length, len_of_voc):
+# 将数字序列转换成onehot矩阵
+# 将数字序列转换成onehot矩阵
+    onehot_encoded = list()
+    if len(seq_int) > max_length:
+      for i in range(max_length):
+        letter = [0 for _ in range(len_of_voc)]
+        letter[seq_int[i]] = 1
+        onehot_encoded.append(letter)
+    else:
+      for i in range(len(seq_int)):
+        letter = [0 for _ in range(len_of_voc)]
+        letter[seq_int[i]] = 1
+        onehot_encoded.append(letter)
+      for i in range(max_length - len(seq_int)):
+        letter = [0 for _ in range(len_of_voc)]
+        onehot_encoded.append(letter)
+            
+    return onehot_encoded
+
+
+def seq_data_to_onehot(seq_data, voc_char_to_int,max_length):
+    onehot_list = list() #转化为integer的序列
+    for seq in seq_data:
+        temp = _seq_to_integer(seq,voc_char_to_int)
+        # print(temp)
+        temp = _integer_to_onehot(temp,max_length,len(voc_char_to_int))
+        # print(temp)
+        onehot_list.append(temp)
+    onehot_list = np.array(onehot_list, dtype=np.float32)
+    return onehot_list
+
+
+
+def onehot_to_seq(matrix_of_single_seq, voc_int_to_char):
+# 将 onehot矩阵转化成单个序列
+    matrix_of_single_seq = np.abs(matrix_of_single_seq)
+    num_seq = np.argmax(matrix_of_single_seq, 1)
+    res = ''
+    for num in num_seq:
+        res += voc_int_to_char[num]
+    return res
+
+def mask_onehot_matrix(onehot_data, mask_rate = 0.2):
+    # To input the whole data
+    res = onehot_data.copy()
+    len_seq = onehot_data.shape[1]
+    len_mask = int(mask_rate*len_seq)
+    for single_matrix in res:
+        mask_choose = np.random.choice(len_seq,len_mask,replace=False)
+        single_matrix[mask_choose,:]=0
+    return res
+
+def my_loss(y_true, y_prod,dict):
+    cnt_res = 0
+    nums_of_batch = y_true.shape[0]
+    len_seq = y_true.shape[1]
+    for i in range(nums_of_batch):
+      y_prod_temp = y_prod[i]
+      y_true_temp = y_true[i]
+      seq_pord = onehot_to_seq(y_prod_temp,dict)
+      seq_true = onehot_to_seq(y_true_temp,dict)
+      cnt = 0
+      for j in range(len(seq_pord)):
+          if seq_pord[j] == seq_true[j]:
+              cnt += 1
+      cnt_res += (cnt/len_seq)
+    return cnt_res / nums_of_batch
