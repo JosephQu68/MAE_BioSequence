@@ -6,12 +6,10 @@
 
 import os
 import tensorflow as tf
-from keras.backend import set_session
 os.environ["CUDA_VISIBLE_DEVICES"] = '6'
+gpus = tf.config.experimental.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(gpus[0], True)
 
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.allow_growth = True
-set_session(tf.compat.v1.Session(config=config))
 
 
 # In[3]:
@@ -21,7 +19,7 @@ from MAESeqModule.MAESeq_utils import dataloader,get_dict, seq_data_to_onehot
 
 seq_list, max_len = dataloader(
     file='dataset/scop_fa_represeq_lib_latest.fa',
-    len_data=35000, max_len_percintile=75)
+    len_data=-1, max_len_percintile=75)
 max_len = 300 # 在这里统一一下
 dict_char2int, dict_int2char = get_dict(seq_list)
 onehot_data = seq_data_to_onehot(seq_list,dict_char2int,max_len)
