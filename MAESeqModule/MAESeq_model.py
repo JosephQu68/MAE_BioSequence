@@ -167,13 +167,15 @@ def calReconstructRate(y_true,y_pred):
 def ReconstructRateVaried(y_true,y_pred):
   y_true = tf.convert_to_tensor(y_true)
   y_pred = tf.convert_to_tensor(y_pred)
-  res = []
-  for _ in range(y_true.shape[0]):
-    val_len = int(tf.reduce_sum(y_true[_]))
-    out = tf.equal(tf.argmax(y_true[_,:val_len,:],axis=1), tf.argmax(y_pred[_,:val_len,:],axis=1))
-    out = tf.cast(out,tf.int32)
-    res.append(tf.reduce_sum(out)/val_len)
-  return sum(res)/len(res)
+
+  val_len = tf.reduce_sum(y_true, axis=2)
+  val_len = tf.cast(val_len, tf.int32)
+
+  out = tf.equal(tf.argmax(y_true, axis=2),tf.argmax(y_pred,axis=2))
+  out = tf.cast(out, tf.int32)
+  sum = tf.reduce_sum(out*val_len)
+
+  return tf.reduce_sum(sum)/tf.reduce_sum(val_len)
 
 
 def my_loss_entropy(y_true, y_pred):
