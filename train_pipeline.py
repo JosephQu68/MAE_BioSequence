@@ -53,7 +53,6 @@ print(onehot_val.shape)
 print(onehot_test.shape)
 
 
-
 # In[ ]:
 
 
@@ -83,6 +82,7 @@ from keras import losses,optimizers,backend
 from  MAESeqModule.MAESeq_model  import AutoencoderGRU,my_loss_entropy,ReconstructRateVaried
 from MAESeqModule.MAESeq_utils import mask_onehot_matrix,evaluate_per_mask_rate,extract_history
 
+MODEL_DIR = '/geniusland/home/qufuchuan/trained_model/'
 def isSaved(mask_rate):
     return mask_rate == 0
 import pandas as pd
@@ -90,8 +90,7 @@ import pandas as pd
 
 train_mask_rates = np.linspace(0,1,11)[:-1]
 dict_for_all = dict()
-# for MASK_RATE in train_mask_rates:
-for MASK_RATE in [0]:
+for MASK_RATE in train_mask_rates:
     backend.clear_session()
     onehot_train_mask = mask_onehot_matrix(onehot_train,MASK_RATE)
     onehot_val_mask = mask_onehot_matrix(onehot_test,MASK_RATE)
@@ -110,7 +109,7 @@ for MASK_RATE in [0]:
                     validation_data=(onehot_val_mask, onehot_val))
                     
     if isSaved(MASK_RATE):
-        autoencoder.save('~/trained_model/')
+        autoencoder.save(MODEL_DIR)
     res_train = extract_history(history)
     res_train.to_csv('res/train_history_mask_rate_%.2f_.csv'%MASK_RATE)
     evaluated = evaluate_per_mask_rate(onehot_test, autoencoder)
