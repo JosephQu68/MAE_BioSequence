@@ -89,6 +89,31 @@ def mask_onehot_matrix(onehot_data, mask_rate = 0.2):
         single_matrix[mask_choose,:]=0
     return res
 
+from MAESeqModule.MAESeq_model import ReconstructRateVaried
+import pandas as pd
+
+def evaluate_per_mask_rate(onehot_test, autoencoder):
+    mask_rates = np.linspace(0,1,21)
+    res = pd.Series(dtype=pd.Float64Dtype)
+    for rate in mask_rates:
+        onehot_test_mask = mask_onehot_matrix(onehot_test, rate)
+        test_res = autoencoder.predict(onehot_test)
+        reconst_rate = ReconstructRateVaried(onehot_test, test_res)
+        # reconst_rate = rate
+        res['Mask '+'%.2f'%rate] = reconst_rate
+    return res
+
+def extract_history(history):
+    res_data_dict = {
+            'Loss':history.history['loss'],
+            'ValLoss':history.history['val_loss'],
+            'ReconstructRate':history.history['ReconstructRateVaried'],
+            'ValReconstructRate':history.history['val_ReconstructRateVaried']
+        }
+    res_data = pd.DataFrame(res_data_dict)
+    return res_data
+    
+
 # def my_loss(y_true, y_prod,dict):
 #     cnt_res = 0
 #     nums_of_batch = y_true.shape[0]
