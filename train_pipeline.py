@@ -53,6 +53,7 @@ print(onehot_val.shape)
 print(onehot_test.shape)
 
 
+
 # In[ ]:
 
 
@@ -83,13 +84,14 @@ from  MAESeqModule.MAESeq_model  import AutoencoderGRU,my_loss_entropy,Reconstru
 from MAESeqModule.MAESeq_utils import mask_onehot_matrix,evaluate_per_mask_rate,extract_history
 
 def isSaved(mask_rate):
-    return False
+    return mask_rate == 0
 import pandas as pd
 
 
 train_mask_rates = np.linspace(0,1,11)[:-1]
 dict_for_all = dict()
-for MASK_RATE in train_mask_rates:
+# for MASK_RATE in train_mask_rates:
+for MASK_RATE in [0]:
     backend.clear_session()
     onehot_train_mask = mask_onehot_matrix(onehot_train,MASK_RATE)
     onehot_val_mask = mask_onehot_matrix(onehot_test,MASK_RATE)
@@ -108,7 +110,7 @@ for MASK_RATE in train_mask_rates:
                     validation_data=(onehot_val_mask, onehot_val))
                     
     if isSaved(MASK_RATE):
-        autoencoder.save('trained_model/')
+        autoencoder.save('~/trained_model/')
     res_train = extract_history(history)
     res_train.to_csv('res/train_history_mask_rate_%.2f_.csv'%MASK_RATE)
     evaluated = evaluate_per_mask_rate(onehot_test, autoencoder)
@@ -121,41 +123,41 @@ overall_res_per_mask_rate = pd.DataFrame(dict_for_all)
 overall_res_per_mask_rate.to_csv('res/overall.csv')
 
 
-# # In[ ]:
+# In[ ]:
 
 
-# loss_res = history.history['loss']
-# val_loss_res = history.history['val_loss']
-# reconstructRate = history.history['ReconstructRateVaried']
-# reconstructRateVal = history.history['val_ReconstructRateVaried']
+loss_res = history.history['loss']
+val_loss_res = history.history['val_loss']
+reconstructRate = history.history['ReconstructRateVaried']
+reconstructRateVal = history.history['val_ReconstructRateVaried']
 
 
-# # In[ ]:
+# In[ ]:
 
 
-# import matplotlib.pyplot as plt
-# plt.plot(loss_res,'r', label='loss')
-# plt.plot(val_loss_res, label = 'val_loss')
-# plt.legend()
-# plt.savefig('res/res_loss.jpg')
+import matplotlib.pyplot as plt
+plt.plot(loss_res,'r', label='loss')
+plt.plot(val_loss_res, label = 'val_loss')
+plt.legend()
+plt.savefig('res/res_loss.jpg')
 
 
-# # In[ ]:
+# In[ ]:
 
 
-# plt.plot(reconstructRate,'r', label='reconstructRate')
-# plt.plot(reconstructRateVal, label = 'val_reconstructRate')
-# plt.legend()
-# plt.savefig('res/res_reconstruct_rate.jpg')
+plt.plot(reconstructRate,'r', label='reconstructRate')
+plt.plot(reconstructRateVal, label = 'val_reconstructRate')
+plt.legend()
+plt.savefig('res/res_reconstruct_rate.jpg')
 
 
-# # In[ ]:
+# In[ ]:
 
 
-# test = autoencoder.predict(onehot_test_mask)
+test = autoencoder.predict(onehot_test_mask)
 
 
-# # In[ ]:
+# In[ ]:
 
 
 from MAESeqModule.MAESeq_utils import onehot_to_seq

@@ -97,10 +97,10 @@ def evaluate_per_mask_rate(onehot_test, autoencoder):
     res = pd.Series(dtype=pd.Float64Dtype)
     for rate in mask_rates:
         onehot_test_mask = mask_onehot_matrix(onehot_test, rate)
-        test_res = autoencoder.predict(onehot_test)
+        test_res = autoencoder.predict(onehot_test_mask)
         reconst_rate = ReconstructRateVaried(onehot_test, test_res)
         # reconst_rate = rate
-        res['Mask '+'%.2f'%rate] = reconst_rate
+        res['Mask '+'%.2f'%rate] = float(reconst_rate)
     return res
 
 def extract_history(history):
