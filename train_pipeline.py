@@ -53,6 +53,7 @@ print(onehot_val.shape)
 print(onehot_test.shape)
 
 
+
 # In[ ]:
 
 
@@ -93,7 +94,7 @@ dict_for_all = dict()
 for MASK_RATE in train_mask_rates:
     backend.clear_session()
     onehot_train_mask = mask_onehot_matrix(onehot_train,MASK_RATE)
-    onehot_val_mask = mask_onehot_matrix(onehot_test,MASK_RATE)
+    onehot_val_mask = mask_onehot_matrix(onehot_val,MASK_RATE)
     onehot_test_mask = mask_onehot_matrix(onehot_test,MASK_RATE)
     
     autoencoder = AutoencoderGRU(latent_dim=512, encoder_shapes=(max_len, dimension))
