@@ -81,19 +81,25 @@ def onehot_to_seq(matrix_of_single_seq, voc_int_to_char):
 
 def mask_onehot_matrix(onehot_data, mask_rate = 0.2):
     # To input the whole data
+    len_data = onehot_data.shape[0]
     res = onehot_data.copy()
-    len_seq = onehot_data.shape[1]
-    len_mask = int(mask_rate*len_seq)
-    for single_matrix in res:
-        mask_choose = np.random.choice(len_seq,len_mask,replace=False)
-        single_matrix[mask_choose,:]=0
+
+    val_len = np.sum(np.sum(onehot_data, axis=2),axis=1)
+    mask_len = (val_len * mask_rate).astype(np.int32)
+    right_limit = val_len-mask_len
+
+    start_point = np.random.randint(right_limit)
+    end_point = start_point+mask_len
+    
+    for _ in range(len_data):
+        res[_,start_point[_]:end_point[_],:] = 0.
     return res
 
 from MAESeqModule.MAESeq_model import ReconstructRateVaried
 import pandas as pd
 
 def evaluate_per_mask_rate(onehot_test, autoencoder):
-    mask_rates = np.linspace(0,1,21)
+    mask_rates = np.linspace(0,1,21)[:-1] # 去掉最后一点，不然会报错
     res = pd.Series(dtype=pd.Float64Dtype)
     for rate in mask_rates:
         onehot_test_mask = mask_onehot_matrix(onehot_test, rate)

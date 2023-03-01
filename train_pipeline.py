@@ -125,45 +125,45 @@ overall_res_per_mask_rate.to_csv('res/overall.csv')
 # In[ ]:
 
 
-loss_res = history.history['loss']
-val_loss_res = history.history['val_loss']
-reconstructRate = history.history['ReconstructRateVaried']
-reconstructRateVal = history.history['val_ReconstructRateVaried']
+# loss_res = history.history['loss']
+# val_loss_res = history.history['val_loss']
+# reconstructRate = history.history['ReconstructRateVaried']
+# reconstructRateVal = history.history['val_ReconstructRateVaried']
 
 
 # In[ ]:
 
 
-import matplotlib.pyplot as plt
-plt.plot(loss_res,'r', label='loss')
-plt.plot(val_loss_res, label = 'val_loss')
-plt.legend()
-plt.savefig('res/res_loss.jpg')
+# import matplotlib.pyplot as plt
+# plt.plot(loss_res,'r', label='loss')
+# plt.plot(val_loss_res, label = 'val_loss')
+# plt.legend()
+# plt.savefig('res/res_loss.jpg')
 
 
 # In[ ]:
 
 
-plt.plot(reconstructRate,'r', label='reconstructRate')
-plt.plot(reconstructRateVal, label = 'val_reconstructRate')
-plt.legend()
-plt.savefig('res/res_reconstruct_rate.jpg')
+# plt.plot(reconstructRate,'r', label='reconstructRate')
+# plt.plot(reconstructRateVal, label = 'val_reconstructRate')
+# plt.legend()
+# plt.savefig('res/res_reconstruct_rate.jpg')
 
 
 # In[ ]:
 
 
-test = autoencoder.predict(onehot_test_mask)
+# test = autoencoder.predict(onehot_test_mask)
 
 
 # In[ ]:
 
 
-from MAESeqModule.MAESeq_utils import onehot_to_seq
-print(ReconstructRateVaried(test, onehot_test))
-for i in range(10):
-  print('原先')
-  print(onehot_to_seq(onehot_test[i],dict_int2char))
-  print('预测')
-  print(onehot_to_seq(test[i],dict_int2char))
+# from MAESeqModule.MAESeq_utils import onehot_to_seq
+# print(ReconstructRateVaried(test, onehot_test))
+# for i in range(10):
+#   print('原先')
+#   print(onehot_to_seq(onehot_test[i],dict_int2char))
+#   print('预测')
+#   print(onehot_to_seq(test[i],dict_int2char))
 
