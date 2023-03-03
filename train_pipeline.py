@@ -6,7 +6,7 @@
 
 import os
 import tensorflow as tf
-os.environ["CUDA_VISIBLE_DEVICES"] = '6'
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 gpus = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(gpus[0], True)
 
@@ -89,9 +89,10 @@ def isSaved(mask_rate):
 import pandas as pd
 
 
-train_mask_rates = np.linspace(0,1,11)[:-1]
+train_mask_rates = np.linspace(0,0.5,11)[1:-1] # checkpoint 
 dict_for_all = dict()
 for MASK_RATE in train_mask_rates:
+    print('Now training for mask rate %.2f'%MASK_RATE)
     backend.clear_session()
     onehot_train_mask = mask_onehot_matrix(onehot_train,MASK_RATE)
     onehot_val_mask = mask_onehot_matrix(onehot_val,MASK_RATE)
