@@ -192,11 +192,11 @@ class AutoencoderGRU_withMaskLoss(keras.Model):
 
   #   return loss, masked_idx_expand, output, masked_data
 
-  # def call(self, inputs, training=None, mask=None):
-  #   encoded = self.encoder(inputs)
-  #   decoded = self.decoder(encoded)
-  #   return decoded
 
+  def call(self, inputs, training=None, mask=None):
+    encoded = self.encoder(inputs)
+    decoded = self.decoder(encoded)
+    return decoded
 
   def train_step(self, data):
     # masked_data, masked_range = self.mask_onehot_matrix(data, self.mask_rate)

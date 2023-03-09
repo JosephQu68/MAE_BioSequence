@@ -192,64 +192,50 @@ class AutoencoderGRU_withMaskLoss(keras.Model):
 
   #   return loss, masked_idx_expand, output, masked_data
 
-  # def call(self, inputs, training=None, mask=None):
-  #   encoded = self.encoder(inputs)
-  #   decoded = self.decoder(encoded)
-  #   return decoded
 
+  def call(self, inputs, training=None, mask=None):
+    encoded = self.encoder(inputs)
+    decoded = self.decoder(encoded)
+    return decoded
 
   def train_step(self, data):
-    # masked_data, masked_range = self.mask_onehot_matrix(data, self.mask_rate)
     with tf.GradientTape() as tape:
-      # loss,masked_idx_expand, output, masked_data= self.cal_loss(data)
       encoded = self.encoder(data[0])
       output = self.decoder(encoded)
-      loss = self.compiled_loss(data[1], output)
+
+      _tmp_target = tf.cast(tf.reduce_sum(data[1],axis=2),tf.int32)
+      _tmp_mask = tf.cast(tf.reduce_sum(data[0],axis=2), tf.int32)
+      mask_idx = tf.bitwise.bitwise_xor(_tmp_target, _tmp_mask)
+      masked_idx_expand = tf.cast(mask_idx[:,:,tf.newaxis], tf.float32)
+      mask_idx = tf.cast(mask_idx, tf.bool)
+
+      loss = self.compiled_loss(data[1][mask_idx], output[mask_idx])
     
-    # train_vars = [
-    #     self.encoder.trainable_variables,
-    #     self.decoder.trainable_variables
-    #   ]
-    # grads = tape.gradient(loss, train_vars)
-    # tv_list = []
-    # for (grad,var) in zip(grads, train_vars):
-    #   for g,v in zip(grad,var):
-    #     tv_list.append((g,v))
-    # self.optimizer.apply_gradients(tv_list)
     trainable_vars = self.trainable_variables
     gradients = tape.gradient(loss, trainable_vars)
-    # self._validate_target_and_loss(output,loss)
-    # Update weights
     self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
     # self.compiled_metrics.update_state(data, output*masked_idx_expand+masked_data)
-    self.compiled_metrics.update_state(data, output)
+    self.compiled_metrics.update_state(data[1], output*masked_idx_expand+data[0])
     return{m.name: m.result() for m in self.metrics}
   
-  # def test_step(self, data):
-  #   loss, masked_idx_expand, output,masked_data = self.cal_loss(data)
+  def test_step(self, data):
+    encoded = self.encoder(data[0])
+    output = self.decoder(encoded)
 
-  #   self.compiled_metrics.update_state(data, output*masked_idx_expand+masked_data)
-  #   return {m.name:m.result() for m in self.metrics}
-    
-    ###
+    _tmp_target = tf.cast(tf.reduce_sum(data[1],axis=2),tf.int16)
+    _tmp_mask = tf.cast(tf.reduce_sum(data[0],axis=2), tf.int16)
+    mask_idx = tf.bitwise.bitwise_xor(_tmp_target, _tmp_mask)
+    masked_idx_expand = tf.cast(mask_idx[:,:,tf.newaxis], tf.float32)
+    mask_idx = tf.cast(mask_idx, tf.bool)
 
-  # def mask_onehot_matrix(self, onehot_data, mask_rate):
-  #   # To input the whole data
-  #   onehot_data = onehot_data.numpy()
-  #   len_data = onehot_data.shape[0]
-  #   res = onehot_data.copy()
+    loss = self.compiled_loss(data[1][mask_idx], output[mask_idx])
+    self.compiled_metrics.update_state(data[1], output*masked_idx_expand+data[0])
 
-  #   val_len = np.sum(np.sum(onehot_data, axis=2),axis=1)
-  #   mask_len = (val_len * mask_rate).astype(np.int32)
-  #   right_limit = val_len-mask_len
+    return{m.name: m.result() for m in self.metrics}
 
-  #   start_point = np.random.randint(right_limit)
-  #   end_point = start_point+mask_len
-    
-  #   for _ in range(len_data):
-  #       res[_,start_point[_]:end_point[_],:] = 0.
-  #   return tf.Variable(res),np.transpose([start_point,end_point])
+
+
 
   def create_encoder(self):
     input_layer = layers.Input(shape=self.encoder_shapes)
