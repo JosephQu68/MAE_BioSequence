@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -11,16 +11,7 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(gpus[0], True)
 
 
-# In[2]:
-
-
-from tensorflow.keras import mixed_precision
-mixed_precision.set_global_policy('mixed_float16')
-tf.keras.backend.clear_session()
-tf.config.optimizer.set_jit(True) # Enable XLA.
-
-
-# In[3]:
+# In[ ]:
 
 
 from MAESeqModule.MAESeq_utils import dataloader,get_dict, seq_data_to_onehot
@@ -32,7 +23,7 @@ DICT_PATH_INT2CHAR = 'dict/int2char.npy'
 DATA_PATH = 'dataset/scop_fa_represeq_lib_latest.fa'
 DATA_NPY_PATH = 'dataset/min20_max300_num100k.npy'
 
-BATCH_SIZE = 256
+BATCH_SIZE = 128
 EPOCHS = 500
 
 
@@ -60,7 +51,7 @@ print("Length of seq is {}".format(max_len))
 print("Dimension is {}".format(dimension))
 
 
-# In[4]:
+# In[ ]:
 
 
 import numpy as np
@@ -72,7 +63,7 @@ print(onehot_val.shape)
 print(onehot_test.shape)
 
 
-# In[5]:
+# In[ ]:
 
 
 from MAESeqModule.MAESeq_utils import mask_onehot_matrix,evaluate_per_mask_rate,extract_history
@@ -86,14 +77,14 @@ onehot_val_mask = mask_onehot_matrix(onehot_val,0.15)
 # val_dataset = val_dataset.shuffle(buffer_size=1024).batch(BATCH_SIZE)
 
 
-# In[6]:
+# In[ ]:
 
 
 import tensorflow as tf
 lr_scheduler = tf.keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate = 1e-3,
     decay_steps = int(2 * len(onehot_train)/BATCH_SIZE),
-    decay_rate = 0.95,
+    decay_rate = 0.98,
     staircase=True
 )
 
@@ -108,10 +99,8 @@ from MAESeqModule.MAESeq_utils import mask_onehot_matrix,evaluate_per_mask_rate,
 
 autoencoder = AutoencoderGRU_withMaskLoss(latent_dim=512, encoder_shapes=(max_len, dimension))
 
-MP_optimizer = tf.keras.optimizers.Adam(learning_rate=lr_scheduler)
-MP_optimizer = mixed_precision.LossScaleOptimizer(MP_optimizer)
           
-autoencoder.compile(optimizer=MP_optimizer, 
+autoencoder.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_scheduler), 
                     loss = my_loss_entropy, 
                     metrics = [ReconstructRateVaried])
     
