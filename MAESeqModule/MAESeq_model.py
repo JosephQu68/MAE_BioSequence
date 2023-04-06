@@ -3,6 +3,7 @@ import keras
 from keras import backend as K
 import tensorflow as tf
 import numpy as np
+from keras.layers.wrappers import Bidirectional
 
 class Autoencoder(Model):
   def __init__(self, encoder_shapes, latent_dim = 64):
@@ -234,6 +235,7 @@ class AutoencoderGRU_withMaskLoss(keras.Model):
     mask_idx = tf.cast(mask_idx, tf.bool)
 
     loss = self.compiled_loss(data[1][mask_idx], output[mask_idx])
+
     self.compiled_metrics.update_state(data[1], output*masked_idx_expand+data[0])
 
     return{m.name: m.result() for m in self.metrics}
@@ -246,19 +248,20 @@ class AutoencoderGRU_withMaskLoss(keras.Model):
     input_layer = layers.Input(shape=self.encoder_shapes)
 
 # kernel_regularizer=keras.regularizers.l2()
-    gru_0 = layers.GRU(self.gru_layer_shape[0],return_sequences=True, 
+
+    gru_0 = Bidirectional(layers.GRU(self.gru_layer_shape[0],return_sequences=True, 
                        recurrent_regularizer=keras.regularizers.l2(),
-                       dropout=DROPOUT_RATE)(input_layer)
+                       dropout=DROPOUT_RATE))(input_layer)
     gru_0 = layers.BatchNormalization()(gru_0)
 
-    gru_1 = layers.GRU(self.gru_layer_shape[1],return_sequences=True,                       
+    gru_1 = Bidirectional(layers.GRU(self.gru_layer_shape[1],return_sequences=True,                       
                        recurrent_regularizer=keras.regularizers.l2(),
-                       dropout=DROPOUT_RATE)(gru_0)
+                       dropout=DROPOUT_RATE))(gru_0)
     gru_1 = layers.BatchNormalization()(gru_1)
 
-    gru_2 = layers.GRU(self.gru_layer_shape[2],return_sequences=True,                       
+    gru_2 = Bidirectional(layers.GRU(self.gru_layer_shape[2],return_sequences=True,                       
                        recurrent_regularizer=keras.regularizers.l2(),
-                       dropout=DROPOUT_RATE)(gru_1)
+                       dropout=DROPOUT_RATE))(gru_1)
     gru_2 = layers.BatchNormalization()(gru_2)
 
     conc = layers.concatenate([gru_0, gru_1,gru_2], axis=2)
@@ -284,24 +287,24 @@ class AutoencoderGRU_withMaskLoss(keras.Model):
     split = tf.split(densed, self.gru_layer_shape, axis=2)
 
     # cddd此处引入长度为32的helper
-    gru_0 = layers.GRU(self.gru_layer_shape[0], return_sequences= True, 
+    gru_0 = Bidirectional(layers.GRU(self.gru_layer_shape[0], return_sequences= True, 
                        name = 'decoder_gru_0',
                        recurrent_regularizer=keras.regularizers.l2(),
-                       dropout=DROPOUT_RATE)(split[0])
+                       dropout=DROPOUT_RATE))(split[0])
     gru_0 = layers.BatchNormalization()(gru_0)
 
     concate_for_gru1 = layers.concatenate([gru_0, split[1]], axis=2)
-    gru_1 = layers.GRU(self.gru_layer_shape[1], return_sequences= True, 
+    gru_1 = Bidirectional(layers.GRU(self.gru_layer_shape[1], return_sequences= True, 
                        name = 'decoder_gru_1',
                        recurrent_regularizer=keras.regularizers.l2(),
-                       dropout=DROPOUT_RATE)(concate_for_gru1)
+                       dropout=DROPOUT_RATE))(concate_for_gru1)
     gru_1 = layers.BatchNormalization()(gru_1)
 
     concate_for_gru2 = layers.concatenate([gru_1,split[2]],axis=2)
-    gru_2 = layers.GRU(self.gru_layer_shape[2],return_sequences=True,
+    gru_2 = Bidirectional(layers.GRU(self.gru_layer_shape[2],return_sequences=True,
                        name = 'decoder_gru_2',                       
                        recurrent_regularizer=keras.regularizers.l2(),
-                       dropout=DROPOUT_RATE)(concate_for_gru2)
+                       dropout=DROPOUT_RATE))(concate_for_gru2)
     gru_2 = layers.BatchNormalization()(gru_2)
 
     densed = layers.Dense(self.encoder_shapes[1])(gru_2)

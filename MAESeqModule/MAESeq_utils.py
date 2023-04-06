@@ -95,6 +95,21 @@ def mask_onehot_matrix(onehot_data, mask_rate = 0.2):
         res[_,start_point[_]:end_point[_],:] = 0.
     return res
 
+def mask_onehot_matrix_discrete(onehot_data, mask_rate = 0.2):
+    # To input the whole data
+    len_data = onehot_data.shape[0]
+    res = onehot_data.copy()
+
+    val_len = np.sum(np.sum(onehot_data, axis=2),axis=1)
+    mask_len = (val_len * mask_rate).astype(np.int32)
+    # mask_idx = np.random.uniform(0,val_len,mask_len).astype(np.int32)
+
+    
+    for _ in range(len_data):
+        mask_idx = np.random.uniform(0,val_len[_],mask_len[_]).astype(np.int32)
+        res[_,mask_idx,:] = 0.
+    return res
+
 from MAESeqModule.MAESeq_model import ReconstructRateVaried
 import pandas as pd
 
